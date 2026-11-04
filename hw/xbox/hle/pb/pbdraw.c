@@ -5078,6 +5078,13 @@ void hle_pbd_reset(void)
     memset(&g_vbrace, 0, sizeof(g_vbrace));
     memset(g_recopied, 0, sizeof(g_recopied));
     sprog_free();
-    memset(g_swz, 0, sizeof(g_swz));        /* pointers into the arena, gone */
-    g_nswz = 0;
+    /* v1.3.0's coherence replaces the old swizzle cache. The renderer and
+     * its timeline are stopped before this per-console reset. */
+    memset(&g_coh, 0, sizeof(g_coh));
+    memset(&g_fill, 0, sizeof(g_fill));
+    memset(&g_coh_rows, 0, sizeof(g_coh_rows));
+    g_coh_shows = 0;
+    memset(g_wbn, 0, sizeof(g_wbn));
+    g_wbn_next = 0;
+    memset(&g_saved_disp, 0, sizeof(g_saved_disp));
 }
