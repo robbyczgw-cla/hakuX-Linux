@@ -148,7 +148,8 @@ def main():
         run([args.harness, args.core, root / 'missing.iso', 60, root / 'saves'], 3, 'load: refused')
         disc(root / 'halt.iso', b'\xf4')
         run([args.harness, args.core, root / 'halt.iso', 600, root / 'saves'], 0,
-            ('guest executed HLT', 'the core asked to shut down', 'unload: the core stopped in'))
+            ('guest executed HLT', 'the core asked to shut down', 'unload: the core stopped in',
+             'network off: the NIC has no link'))
         run([args.harness, args.core, root / 'halt.iso', 600, root / 'saves'], 0,
             ('guest executed HLT', 'the core asked to shut down', 'the core does not stop (HAKUX_LR_STOP=0); '
              'ending the process'), old)
@@ -208,6 +209,12 @@ def main():
         # Changed during the game (the menu), they wait for the next start;
         # the crop doesn't.
         disc(root / 'spin.iso', b'\xeb\xfe')
+        # A game that uses PTIMER must close and boot again without leaving
+        # a device thread touching freed registers in the frontend process.
+        alarm = b'\xc7\x05' + struct.pack('<II', 0xfd009420, 0x7fffffe0) + b'\xeb\xfe'
+        disc(root / 'ptimer.iso', alarm)
+        cycles([args.harness, args.core, root / 'ptimer.iso', 10, root / 'saves'],
+               os.environ, 5, expect='PTIMER alarm in use')
         env = dict(os.environ, HARNESS_OPTIONS_LATER='hakux_render_scale=3;hakux_video_region=pal;'
                    'hakux_crop_overscan=disabled')
         run([args.harness, args.core, root / 'spin.iso', 60, root / 'saves'], 0,

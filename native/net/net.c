@@ -17,7 +17,7 @@
 
 #define TX_SLOTS 128
 #define RX_SLOTS 256
-#define MAX_FDS 64
+#define MAX_FDS 256                     /* nat: a socket per connection */
 
 typedef struct Frame {
     uint16_t len;
@@ -47,11 +47,22 @@ static struct {
     FILE *pcap;                         /* under lock */
     uint32_t twin;                      /* a console with our MAC, not told yet; 0: none */
 } g_net = {
+    .mode = NC_NET_OFF,
     .lock = PTHREAD_MUTEX_INITIALIZER,
-    .rx_cond = PTHREAD_COND_INITIALIZER,
     .wake_fd = -1,
     .cfg = { .lan_port = 3075, .kai_port = 34523 },
 };
+
+/* One monotonic condition per process, shared by successive console boots. */
+static pthread_once_t g_rx_once = PTHREAD_ONCE_INIT;
+static void init_rx_cond(void)
+{
+    pthread_condattr_t attr;
+    pthread_condattr_init(&attr);
+    pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+    pthread_cond_init(&g_net.rx_cond, &attr);
+    pthread_condattr_destroy(&attr);
+}
 
 static bool ring_init(Ring *r, unsigned n)
 {
@@ -294,7 +305,8 @@ size_t nc_net_recv(uint8_t *buf, size_t cap)
 void nc_net_wait_rx(uint64_t timeout_ns)
 {
     struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);   /* rx_cond's default clock */
+    pthread_once(&g_rx_once, init_rx_cond);
+    clock_gettime(CLOCK_MONOTONIC, &ts);
     ts.tv_sec += (time_t)(timeout_ns / 1000000000);
     ts.tv_nsec += (long)(timeout_ns % 1000000000);
     if (ts.tv_nsec >= 1000000000) {
@@ -363,6 +375,7 @@ static void *net_thread(void *arg)
 void nc_net_start(void)
 {
     nc_net_stop();
+    pthread_once(&g_rx_once, init_rx_cond);
     /* debug: NC_NET="option option ..." over the app's (via debug.hakux.env) */
     const char *env = getenv("NC_NET");
     if (env) {
