@@ -249,11 +249,12 @@ def main():
         cycles([args.harness, args.core, root / 'spin.iso', 30, root / 'saves'],
                dict(os.environ, HARNESS_VULKAN='1'), 20)
         # Upstream's network and NIC threads also stop before the next boot;
-        # failed backend starts and failed boots must release their resources.
+        # v1.3.0 provides NAT too; all backends and failed boots must release
+        # their resources before another console uses the same library.
         for network, marker in (
                 ('net=lan lanport=43075 lanbcast=127.0.0.1', 'lan: started'),
                 ('net=kai kai=127.0.0.1:43076', 'kai: started'),
-                ('net=nat', "nat: couldn't start")):
+                ('net=nat', 'nat: started')):
             cycles([args.harness, args.core, root / 'spin.iso', 30, root / 'saves'],
                    dict(os.environ, NC_NET=network), 5, marker)
         cycles([args.harness, args.core, root / 'halt.iso', 60, root / 'saves'],

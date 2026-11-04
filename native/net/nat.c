@@ -220,10 +220,20 @@ static void nat_poll(struct pollfd *fds, int n)
     g_nat.overflow = 0;
 }
 
+static void nat_close(void)
+{
+    /* nc_net_stop joined the network thread before closing its backend. */
+    if (g_nat.slirp) {
+        slirp_cleanup(g_nat.slirp);
+    }
+    memset(&g_nat, 0, sizeof(g_nat));
+}
+
 const NcNetBackend nc_net_nat = {
     .name = "nat",
     .init = nat_init,
     .input = nat_input,
     .fill = nat_fill,
     .poll = nat_poll,
+    .close = nat_close,
 };
