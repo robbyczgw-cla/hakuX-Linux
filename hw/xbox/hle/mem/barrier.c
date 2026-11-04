@@ -130,7 +130,13 @@ static void tables_free(void)
     g_free(g_cspan);
     g_free(g_wseq);
     g_free(g_cseq);
+    g_free(g_bseq);
+    g_free(g_nbr_n);
+    g_free(g_nbr_t);
     g_contended = g_cspan = g_wseq = g_cseq = NULL;
+    g_bseq = NULL;
+    g_nbr_n = NULL;
+    g_nbr_t = NULL;
 }
 
 void hle_barrier_init(uint64_t ram_size)
