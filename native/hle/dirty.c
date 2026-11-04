@@ -81,6 +81,8 @@ static void freed(uint32_t pa, uint32_t len)
 
 void nc_hle_dirty_reset(void)
 {
+    free(g_hdirty);
+    g_hdirty = NULL;
     g_vm = NULL;                /* nc_vm_destroy cleared the hooks */
 }
 

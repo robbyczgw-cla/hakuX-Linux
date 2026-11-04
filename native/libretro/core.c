@@ -409,6 +409,7 @@ static void prepare_boot(bool relaunch)
 {
     nc_core_set_relaunch(relaunch);
     nc_io_set_hdd_root(g_hdd);
+    nc_io_set_device_time(true);  /* v1.3.0 console drive timing, as in the app */
     nc_hle_set_mode("replace");
     nc_hle_set_base_path(g_cache);
     nc_lr_options_apply();                          /* the render scale, the console's settings */

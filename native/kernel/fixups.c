@@ -223,7 +223,7 @@ static uint32_t xmv_stub(NcKernel *k, uint32_t m)
 
 static bool xmv_wait_on(void)
 {
-    char v[PROP_VALUE_MAX] = "";
+    char v[NC_PROPERTY_VALUE_MAX] = "";
     hle_prop_get("debug.hakux.xmvwait", v);
     return strcmp(v, "0") != 0;
 }
