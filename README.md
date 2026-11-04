@@ -1,3 +1,13 @@
+# hakuX-Linux
+
+> **This is a fork.** It carries the AArch64 Linux / libretro port of hakuX
+> ([PR #9](https://github.com/rfandango/hakuX/pull/9) by [portare-ch](https://github.com/portare-ch/hakuX))
+> on top of hakuX 1.3.0, with small Linux fixes, for handhelds running [ROCKNIX](https://rocknix.org)
+> (it is the Xbox core used by [pocket-ui](https://github.com/robbyczgw-cla/pocket-ui)).
+> hakuX itself is by [rfandango](https://github.com/rfandango/hakuX) and stays GPL-3.0; please report
+> Android issues there. Fixes that help everyone are offered back upstream.
+> Branch `linux-1.3.0`; build and test notes: `docs/` (libretro section).
+
 # hakuX
 
 hakuX runs original Xbox games on Android (arm64), tuned for Adreno GPUs.
