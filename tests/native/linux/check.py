@@ -39,6 +39,75 @@ def disc(path, code, imports=()):
     path.write_bytes(image)
 
 
+def named_objects_code():
+    """A guest that names an event (XAPI's CreateEvent: relative to
+    ObWin32NamedObjectsDirectory, -4, with OBJ_OPENIF), creates it again, opens
+    it by name in another case (OpenEvent: ObOpenObjectByName) and by its
+    absolute name, signals it through the opened handle, and checks the
+    errors: a wrong type, a missing name, and the name gone once every handle
+    is closed. HLT when all hold; a failed check N stores to address 0 at
+    its own eip (f<N>)."""
+    T = {'create': 0x10f00, 'open': 0x10f04, 'close': 0x10f08, 'evtype': 0x10f0c, 'semtype': 0x10f10,
+         'set': 0x10f14, 'wait': 0x10f18}
+    D = 0x11800
+    H1, H2, H3, H4, ZERO = D, D + 4, D + 8, D + 12, D + 16
+    names = {'create': (D + 0x20, D + 0x60, D + 0x100, b'TestEvent', 0x80),
+             'open': (D + 0x30, D + 0x68, D + 0x110, b'tESTeVENT', 0),
+             'missing': (D + 0x40, D + 0x70, D + 0x120, b'Missing', 0),
+             'abs': (D + 0x50, D + 0x78, D + 0x130, b'\\BaseNamedObjects\\TestEvent', 0)}
+    code = bytearray()
+    fails = []
+    def emit(*parts):
+        for p in parts:
+            code.extend(p)
+    def u32(v):
+        return struct.pack('<I', v & 0xffffffff)
+    def store(addr, value):                 # mov dword [addr], value
+        emit(b'\xc7\x05', u32(addr), u32(value))
+    def push(v):
+        emit(b'\x68', u32(v))
+    def push_mem(addr):
+        emit(b'\xff\x35', u32(addr))
+    def call(name):
+        emit(b'\xff\x15', u32(T[name]))
+    def expect(status):                     # cmp eax, status; jne f<N>
+        emit(b'\x3d', u32(status), b'\x0f\x85')
+        fails.append(len(code))
+        emit(u32(0))
+    root = {'abs': 0}
+    for key, (oa, string, chars, text, attributes) in names.items():
+        store(string, len(text) | len(text) << 16)
+        store(string + 4, chars)
+        store(oa, root.get(key, 0xfffffffc))
+        store(oa + 4, string)
+        store(oa + 8, attributes)
+    def open_(key, type_slot, handle=H4):
+        push(handle), push(0)
+        push_mem(T[type_slot]) if type_slot else push(0)
+        push(names[key][0]), call('open')
+    push(0), push(0), push(names['create'][0]), push(H1), call('create'), expect(0)
+    push(0), push(0), push(names['create'][0]), push(H3), call('create'), expect(0x40000000)
+    open_('open', 'evtype', H2), expect(0)
+    push(0), push_mem(H2), call('set')
+    push(ZERO), push(0), push_mem(H1), call('wait'), expect(0)
+    open_('open', 'semtype'), expect(0xc0000024)
+    open_('missing', 'evtype'), expect(0xc0000034)
+    open_('abs', None), expect(0)
+    push_mem(H4), call('close')
+    for h in (H1, H2, H3):
+        push_mem(h), call('close')
+    open_('open', 'evtype'), expect(0xc0000034)
+    emit(b'\xf4')
+    for n, at in enumerate(fails, 1):       # f<N>: mov dword [0], N
+        struct.pack_into('<i', code, at, len(code) - (at + 4))
+        store(0, n)
+    code.extend(bytes(0x900 - len(code)))
+    for oa, string, chars, text, attributes in names.values():
+        code.extend(bytes(chars - 0x11000 - len(code)))
+        code.extend(text)
+    return bytes(code)
+
+
 def run(command, expected, marker, env=None):
     result = subprocess.run([str(x) for x in command], env=env, capture_output=True, text=True, timeout=15)
     print(result.stdout, end='')
@@ -80,6 +149,9 @@ def main():
         # The renderer's boot path (drawing itself needs a title and a GPU).
         run([build / 'xboxrun', '--render', root / 'halt.iso', root / 'render'], 0,
             ('renderer ON without a display', 'guest executed HLT'), env)
+        # Named objects: XAPI's CreateEvent and OpenEvent through the kernel.
+        disc(root / 'named.iso', named_objects_code(), (189, 243, 187, 16, 30, 225, 233))
+        run([build / 'xboxrun', '--headless', root / 'named.iso', root / 'named'], 0, 'guest executed HLT', env)
         run([build / 'xboxrun', '--headless', root / 'spin.iso', root / 'data'], 5, 'timeout after 1 s', env)
 
 
