@@ -1117,6 +1117,10 @@ void hle_barrier_free(void)
     /* no protection changed here: the next boot maps guest RAM anew */
     g_stale = 0;
     g_stale_fill = NULL;
+    g_guard_fill = NULL;
+    g_guard_gen = 0;
+    g_guard_drops = 1;
+    g_nbr_served = g_nbr_hot = 0;
     memset(g_na, 0, sizeof(g_na));
     g_nna = 0;
     g_stale_lock = 0;

@@ -1778,6 +1778,7 @@ void nc_kernel_destroy(NcKernel *k)
     nc_x86mmio_reset();
     nc_kstate_reset();
     nc_ob_reset();
+    nc_fixups_reset();
     memset(g_recent, 0, sizeof(g_recent));
     g_nrecent = 0;
     g_trace_left = -1;

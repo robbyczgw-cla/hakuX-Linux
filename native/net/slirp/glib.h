@@ -11,6 +11,7 @@
 #include "native/compat/glib/glib.h"
 
 #include <stdio.h>
+#include <signal.h>
 #include <strings.h>
 
 #ifdef __cplusplus

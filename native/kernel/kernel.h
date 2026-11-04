@@ -295,6 +295,7 @@ void nc_intr_reset(void);
 void nc_x86mmio_reset(void);
 void nc_kstate_reset(void);
 void nc_ob_reset(void);
+void nc_fixups_reset(void);
 /* Before nc_kernel_init: the boot is for a savestate whose process object is
  * at kprocess (0: none), and the kernel pool's first range goes where the
  * boot that made it put it, under that object (kernel.c POOL_BASE). */
