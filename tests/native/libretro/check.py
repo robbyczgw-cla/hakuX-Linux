@@ -182,7 +182,7 @@ def main():
         # its place and boots the XBE the launch data page names.
         disc(root / 'relaunch.iso', RELAUNCH, imports=(49, 164))
         run([args.harness, args.core, root / 'relaunch.iso', 600, root / 'saves'], 0,
-            ('relaunch into \\default.xbe', 'relaunch: starting RetroArch again',
+            ('relaunch into \\Device\\CdRom0\\default.xbe', 'relaunch: starting RetroArch again',
              'relaunch: \\Device\\CdRom0\\default.xbe', 'guest executed HLT', 'ending the process'), old)
         if (root / 'saves' / 'relaunch.bin').exists():
             raise SystemExit('FAIL: the relaunch left its launch data page')
@@ -271,7 +271,7 @@ def main():
              'message: RetroArch rebuilt its video driver: the game starts again', 'ran 60 frames'),
             dict(os.environ, HARNESS_VULKAN='1', HARNESS_REINIT_AT='20'))
         run([args.harness, args.core, root / 'relaunch.iso', 600, root / 'saves'], 0,
-            ('relaunch into \\default.xbe', 'relaunch: the game boots again in RetroArch\'s process',
+            ('relaunch into \\Device\\CdRom0\\default.xbe', 'relaunch: the game boots again in RetroArch\'s process',
              'relaunch: the core stopped in', 'relaunch: \\Device\\CdRom0\\default.xbe', 'guest executed HLT',
              'unload: the core stopped in'))
         if (root / 'saves' / 'relaunch.bin').exists():
